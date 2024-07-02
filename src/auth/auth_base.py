@@ -11,6 +11,9 @@ class Authenticator(metaclass=abc.ABCMeta):
     def authenticate(self, request_handler):
         pass
 
+    def get_current_user(self, request_handler):
+        return None
+
     def get_client_visible_config(self):
         return self._client_visible_config
 

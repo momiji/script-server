@@ -40,6 +40,7 @@ class ServerConfig(object):
         self.max_request_size_mb = None
         self.callbacks_config = None
         self.user_header_name = None
+        self.groups_header_name = None
         self.secret_storage_file = None
         self.xsrf_protection = None
         # noinspection PyTypeChecker
@@ -145,10 +146,12 @@ def from_json(conf_path, temp_folder):
         allowed_users = access_config.get('allowed_users')
         user_groups = model_helper.read_dict(access_config, 'groups')
         user_header_name = access_config.get('user_header_name')
+        groups_header_name = access_config.get('groups_header_name')
     else:
         allowed_users = None
         user_groups = {}
         user_header_name = None
+        groups_header_name = None
 
     auth_config = json_object.get('auth')
     if auth_config:
@@ -166,6 +169,8 @@ def from_json(conf_path, temp_folder):
     else:
         def_trusted_ips = ['127.0.0.1', '::1']
         def_admins = def_trusted_ips
+        if groups_header_name:
+            config.authenticator = create_header_authenticator(user_header_name, groups_header_name)
 
     if access_config:
         trusted_ips = strip(read_list(access_config, 'trusted_ips', default=def_trusted_ips))
@@ -189,6 +194,7 @@ def from_json(conf_path, temp_folder):
     config.full_history_users = full_history_users
     config.code_editor_users = code_editor_users
     config.user_header_name = user_header_name
+    config.groups_header_name = groups_header_name
     config.ip_validator = TrustedIpValidator(trusted_ips)
 
     config.max_request_size_mb = read_int_from_config('max_request_size', json_object, default=10)
@@ -230,6 +236,10 @@ def create_authenticator(auth_object, temp_folder, process_invoker: ProcessInvok
 
     return authenticator
 
+def create_header_authenticator(user_header_name, groups_header_name):
+    from auth.auth_header import HeaderAuthenticator
+    authenticator = HeaderAuthenticator(user_header_name, groups_header_name)
+    return authenticator
 
 def _prepare_allowed_users(allowed_users, admin_users, user_groups):
     if (allowed_users is None) or (allowed_users == '*'):

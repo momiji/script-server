@@ -35,6 +35,10 @@ class TornadoAuth:
         return active
 
     def _get_current_user(self, request_handler):
+        authenticator_username = self.authenticator.get_current_user(request_handler)
+        if authenticator_username:
+            return authenticator_username
+
         cookie_username = tornado_utils.get_secure_cookie(request_handler, 'username')
         if cookie_username:
             return cookie_username
